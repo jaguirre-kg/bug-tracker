@@ -4,9 +4,8 @@ pipeline {
     stages {
         stage('Unit Test - Backend') {
             steps {
-                echo ''
                 dir('bugtracker-backend') {
-                    go test -v ./...
+                    sh 'go test -v ./...'
                 }
             }
         }
