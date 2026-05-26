@@ -2,20 +2,22 @@ pipeline {
     agent any
 
     stages {
-        stage('Unit Test - Backend') {
-            agent {
-                docker {
-                    image 'snakee/golang-junit:1.21'
-                    reuseNode true
-                }
-            }
-            environment {
-                GOCACHE = "${WORKSPACE}/.cache/go-build"
-                GOPATH = "${WORKSPACE}/.go"
-            }
-            steps {
-                dir('bugtracker-backend') {
-                    sh '''
+        stage('Execute Unit Tests') {
+            parallel {
+                stage('Unit Test - Backend') {
+                    agent {
+                        docker {
+                            image 'snakee/golang-junit:1.21'
+                            reuseNode true
+                        }
+                    }
+                    environment {
+                        GOCACHE = "${WORKSPACE}/.cache/go-build"
+                        GOPATH = "${WORKSPACE}/.go"
+                    }
+                    steps {
+                        dir('bugtracker-backend') {
+                            sh '''
                     mkdir -p reports
 
                     go test -v ./... 2>&1 | go-junit-report > reports/test-results.xml
@@ -24,53 +26,55 @@ pipeline {
                     go tool cover -html=coverage.out -o reports/coverage.html
 
                     '''
-                }
-            }
-            post {
-                always {
-                    junit 'bugtracker-backend/reports/test-results.xml'
-                    publishHTML target: [
+                        }
+                    }
+                    post {
+                        always {
+                            junit 'bugtracker-backend/reports/test-results.xml'
+                            publishHTML target: [
                         reportDir: 'bugtracker-backend/reports',
                         reportFiles: 'coverage.html',
                         reportName: 'Backend Coverage Report'
                     ]
-                }
-            }
-        }
+                        }
+                    }
+                        }
 
-        stage('Unit Test - Frontend') {
-            agent {
-                docker {
-                    image 'node:20-alpine'
-                    reuseNode true
-                }
-            }
-            steps {
-                dir('bugtracker-frontend') {
-                    sh '''
+                stage('Unit Test - Frontend') {
+                    agent {
+                        docker {
+                            image 'node:20-alpine'
+                            reuseNode true
+                        }
+                    }
+                    steps {
+                        dir('bugtracker-frontend') {
+                            sh '''
                     npm ci
                     npm test
                     mkdir -p reports
-                    
+
                     if [ -f "test-results.xml" ]; then
                         mv test-results.xml reports/
                     fi
-                    
+
                     # 4. Movemos la carpeta completa de cobertura adentro de reports
                     if [ -d "coverage" ]; then
                         mv coverage reports/
                     fi
                     '''
-                }
-            }
-            post {
-                always {
-                    junit 'bugtracker-frontend/reports/test-results.xml'
-                    publishHTML target: [
+                        }
+                    }
+                    post {
+                        always {
+                            junit 'bugtracker-frontend/reports/test-results.xml'
+                            publishHTML target: [
                         reportDir: 'bugtracker-frontend/reports',
                         reportFiles: 'coverage/index.html',
                         reportName: 'Frontend Coverage Report'
                     ]
+                        }
+                    }
                 }
             }
         }
