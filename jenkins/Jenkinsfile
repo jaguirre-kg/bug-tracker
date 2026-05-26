@@ -50,12 +50,27 @@ pipeline {
                     sh '''
                     npm ci
                     npm test
+                    mkdir -p reports
+                    
+                    if [ -f "test-results.xml" ]; then
+                        mv test-results.xml reports/
+                    fi
+                    
+                    # 4. Movemos la carpeta completa de cobertura adentro de reports
+                    if [ -d "coverage" ]; then
+                        mv coverage reports/
+                    fi
                     '''
                 }
             }
             post {
                 always {
-                    junit 'bugtracker-frontend/test-results.xml'
+                    junit 'bugtracker-frontend/reports/test-results.xml'
+                    publishHTML target: [
+                        reportDir: 'bugtracker-frontend/reports',
+                        reportFiles: 'coverage/index.html',
+                        reportName: 'Frontend Coverage Report'
+                    ]
                 }
             }
         }
