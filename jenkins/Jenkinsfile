@@ -18,6 +18,7 @@ pipeline {
                     steps {
                         dir('bugtracker-backend') {
                             sh '''
+                    rm -rf reports
                     mkdir -p reports
 
                     go test -v ./... 2>&1 | go-junit-report > reports/test-results.xml
@@ -32,13 +33,13 @@ pipeline {
                         always {
                             junit 'bugtracker-backend/reports/test-results.xml'
                             publishHTML target: [
-                        reportDir: 'bugtracker-backend/reports',
-                        reportFiles: 'coverage.html',
-                        reportName: 'Backend Coverage Report'
-                    ]
+                                reportDir: 'bugtracker-backend/reports',
+                                reportFiles: 'coverage.html',
+                                reportName: 'Backend Coverage Report'
+                            ]
                         }
                     }
-                        }
+                }
 
                 stage('Unit Test - Frontend') {
                     agent {
@@ -52,6 +53,8 @@ pipeline {
                             sh '''
                     npm ci
                     npm test
+
+                    rm -rf reports
                     mkdir -p reports
 
                     if [ -f "test-results.xml" ]; then
