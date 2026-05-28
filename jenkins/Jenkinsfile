@@ -72,10 +72,10 @@ pipeline {
                         always {
                             junit 'bugtracker-frontend/reports/test-results.xml'
                             publishHTML target: [
-                        reportDir: 'bugtracker-frontend/reports',
-                        reportFiles: 'coverage/index.html',
-                        reportName: 'Frontend Coverage Report'
-                    ]
+                                reportDir: 'bugtracker-frontend/reports',
+                                reportFiles: 'coverage/index.html',
+                                reportName: 'Frontend Coverage Report'
+                            ]
                         }
                     }
                 }
